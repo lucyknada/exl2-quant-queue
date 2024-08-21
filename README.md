@@ -13,6 +13,7 @@ this script automatically handles:
 - if there's an external measurement file, just wait till it starts the measurement pass, kill the process, add the measurement file into the output folder of that model and restart, it'll pick it up from there.
 
 a few things this assumes:
+- there's a venv in the exllama folder called "venv" (`python -m venv venv`)
 - huggingface-cli and hf_transfer are installed (`pip install "huggingface_hub[cli]" hf_transfer`)
 - you git cloned https://github.com/turboderp/exllamav2
 - you installed all the dependencies via `pip install -r requirements.txt`
