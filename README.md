@@ -15,6 +15,7 @@ this script automatically handles:
 a few things this assumes:
 - there's a venv in the exllama folder called "venv" (`python -m venv venv`)
 - huggingface-cli and hf_transfer are installed (`pip install "huggingface_hub[cli]" hf_transfer`)
+- you're logged into huggingface-cli (`huggingface-cli login`)
 - you git cloned https://github.com/turboderp/exllamav2
 - you installed all the dependencies via `pip install -r requirements.txt`
 - you either installed an appropriate wheel for your cuda+python+torch version from exl2 releasepage e.g. `pip install https://github.com/turboderp/exllamav2/releases/download/v0.1.8/exllamav2-0.1.8+cu121.torch2.2.2-cp310-cp310-linux_x86_64.whl` or you built it directly with `pip install .` (requires nvcc and appropriate gcc versions etc, I prefer the former)
