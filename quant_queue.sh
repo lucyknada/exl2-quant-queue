@@ -31,9 +31,9 @@ quant() {
   fi
 
   cat "./models/${1}/README.md" | sed -z "s/---/---\n### exl2 quant (measurement.json in main branch)\n---\n### check revisions for quants\n---\n/2" > "${OUTPUT_DIRECTORY}/README.md"
-  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private --revision ${BPW}bpw "${1}-exl2" "${OUTPUT_DIRECTORY}" || exit
-  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private "${1}-exl2" ${OUTPUT_DIRECTORY}/README.md ./README.md || exit
-  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private "${1}-exl2" ./output/$1/measurement.json ./measurement.json || exit
+  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private --revision ${BPW}bpw "${USER}/${1}-exl2" "${OUTPUT_DIRECTORY}" || exit
+  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private "${USER}/${1}-exl2" ${OUTPUT_DIRECTORY}/README.md ./README.md || exit
+  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private "${USER}/${1}-exl2" ./output/$1/measurement.json ./measurement.json || exit
 }
 
 # download hfdownloader (https://github.com/bodaay/HuggingFaceModelDownloader) into current directory
