@@ -49,10 +49,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   fi
   
   if [ ! -f "./output/${x}_${y}/output/output.safetensors" ]; then
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --local-dir="./models/${x}_${y}" --local-dir-use-symlinks=False
-    python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
-    rm ./models/${x}_${y}/*.bin
-    rm ./models/${x}_${y}/*.pth
+    if [ ! -f "./models/${x}_${y}/config.json" ]; then
+      HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --local-dir="./models/${x}_${y}" --local-dir-use-symlinks=False
+      python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
+      rm ./models/${x}_${y}/*.bin
+      rm ./models/${x}_${y}/*.pth
+    fi
     quant "${x}_${y}" "$BPW"
   fi
 done < "queue.txt"
