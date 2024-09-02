@@ -36,9 +36,6 @@ quant() {
   HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private "${USER}/${1}-exl2" ./output/$1/measurement.json ./measurement.json || exit
 }
 
-# download hfdownloader (https://github.com/bodaay/HuggingFaceModelDownloader) into current directory
-bash <(curl -sSL https://g.bodaay.io/hfd) -h
-
 while IFS= read -r line || [[ -n "$line" ]]; do
   modified_line="${line#https://}"
   IFS="/" read -ra parts <<< "$modified_line"
@@ -52,7 +49,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   fi
   
   if [ ! -f "./output/${x}_${y}/output/output.safetensors" ]; then
-    ./hfdownloader -m "${x}/${y}" -s ./models -c 2 -t ${HFTOKEN} || exit
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --local-dir="./models/${x}_${y}" --local-dir-use-symlinks=False
     python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
     rm ./models/${x}_${y}/*.bin
     rm ./models/${x}_${y}/*.pth
