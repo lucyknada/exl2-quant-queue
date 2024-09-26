@@ -1,7 +1,6 @@
 #!/bin/bash
 
 USER=""
-HFTOKEN=""
 
 . ./venv/bin/activate
 
