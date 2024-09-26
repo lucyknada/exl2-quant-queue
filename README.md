@@ -13,14 +13,13 @@ this script automatically handles:
 - if there's an external measurement file, just wait till it starts the measurement pass, kill the process, add the measurement file into the output folder of that model and restart, it'll pick it up from there.
 
 a few things this assumes:
-- there's a venv in the exllama folder called "venv" (`python -m venv venv`)
 - huggingface-cli and hf_transfer are installed (`pip install "huggingface_hub[cli]" hf_transfer`)
 - you're logged into huggingface-cli (`huggingface-cli login`)
 - you git cloned https://github.com/turboderp/exllamav2
 - you installed all the dependencies via `pip install -r requirements.txt`
 - you either installed an appropriate wheel for your cuda+python+torch version from exl2 releasepage e.g. `pip install https://github.com/turboderp/exllamav2/releases/download/v0.1.8/exllamav2-0.1.8+cu121.torch2.2.2-cp310-cp310-linux_x86_64.whl` or you built it directly with `pip install .` (requires nvcc and appropriate gcc versions etc, I prefer the former)
 - you dropped quant_queue.sh inside the exllamav2 folder
-- you changed USER and HFTOKEN variable inside quant_queue.sh
+- you changed the USER variable inside quant_queue.sh
 - you created a queue.txt alongside it
 
 queue.txt example:
