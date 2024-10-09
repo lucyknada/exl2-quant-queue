@@ -1,6 +1,7 @@
 #!/bin/bash
 
 USER=""
+HFTOKEN=""
 
 . ./venv/bin/activate
 
@@ -46,10 +47,10 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   #if [ $response_code -eq 200 ]; then
     #continue
   #fi
-  
+
   #if [ ! -f "./output/${x}_${y}/output/output.safetensors" ]; then
     if [ ! -f "./models/${x}_${y}/config.json" ]; then
-      HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --local-dir="./models/${x}_${y}" --local-dir-use-symlinks=False
+      HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --exclude "*checkpoint*" "*.bin" "*global_state*" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
       python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.pth
