@@ -49,7 +49,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
   #if [ ! -f "./output/${x}_${y}/output/output.safetensors" ]; then
     if [ ! -f "./models/${x}_${y}/config.json" ]; then
-      HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --exclude "*checkpoint*" "*.bin" "*global_state*" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
+      HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --exclude "*checkpoint*" "*global_state*" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
       python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.pth
