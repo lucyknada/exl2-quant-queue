@@ -14,13 +14,22 @@ quant() {
   if [ -f "${OUTPUT_DIRECTORY}/config.json" ]; then
     echo "Conversion for $1 at ${BPW}bpw already complete. Skipping."
   else
-    python convert.py \
-      -i ./models/$1/ \
-      -w "$WORK_DIRECTORY" \
-      -d 1 \
-      -r \
-      -o "$OUTPUT_DIRECTORY" \
-      -b $BPW || exit
+    if [ -f "${WORK_DIRECTORY}/args.json" ]; then
+      python convert.py \
+        -i ./models/$1/ \
+        -w "$WORK_DIRECTORY" \
+        -r \
+        -d 1 \
+        -o "$OUTPUT_DIRECTORY" \
+        -b $BPW || exit
+    else
+      python convert.py \
+        -i ./models/$1/ \
+        -w "$WORK_DIRECTORY" \
+        -d 1 \
+        -o "$OUTPUT_DIRECTORY" \
+        -b $BPW || exit
+    fi
   fi
 
   cat "./models/${1}/README.md" | sed -z "s/---/---\n### exl3 quant\n---\n### check revisions for quants\n---\n/2" > "${OUTPUT_DIRECTORY}/README.md"
@@ -41,10 +50,8 @@ while IFS= read -r line || [[ -n "$line" ]]; do
       python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.bin
     fi
-    if ls ./models/${x}_${y}/*.pth 1> /dev/null 2>&1; then
-      rm ./models/${x}_${y}/*.pth
-    fi
   fi
 
   quant "${x}_${y}" "$BPW"
+
 done < "queue.txt"
