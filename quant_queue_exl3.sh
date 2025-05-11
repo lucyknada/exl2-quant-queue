@@ -14,22 +14,12 @@ quant() {
   if [ -f "${OUTPUT_DIRECTORY}/config.json" ]; then
     echo "Conversion for $1 at ${BPW}bpw already complete. Skipping."
   else
-    if [ -f "${WORK_DIRECTORY}/args.json" ]; then
-      python convert.py \
-        -i ./models/$1/ \
-        -w "$WORK_DIRECTORY" \
-        -r \
-        -d 1 \
-        -o "$OUTPUT_DIRECTORY" \
-        -b $BPW || exit
-    else
-      python convert.py \
-        -i ./models/$1/ \
-        -w "$WORK_DIRECTORY" \
-        -d 1 \
-        -o "$OUTPUT_DIRECTORY" \
-        -b $BPW || exit
-    fi
+    python convert.py \
+      -i ./models/$1/ \
+      -w "$WORK_DIRECTORY" \
+      -d 1 \
+      -o "$OUTPUT_DIRECTORY" \
+      -b $BPW || exit
   fi
 
   cat "./models/${1}/README.md" | sed -z "s/---/---\n### exl3 quant\n---\n### check revisions for quants\n---\n/2" > "${OUTPUT_DIRECTORY}/README.md"
