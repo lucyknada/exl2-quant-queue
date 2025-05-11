@@ -13,21 +13,12 @@ quant() {
 
   if [ -f "${OUTPUT_DIRECTORY}/config.json" ]; then
     echo "Conversion for $1 at ${BPW}bpw already complete. Skipping."
-    continue
-  fi
-
-  if [ -f "${WORK_DIRECTORY}/job.json" ]; then
-    echo "Resuming conversion for $1 at ${BPW}bpw."
-    python convert.py \
-      -d 0,1 \
-      -w "$WORK_DIRECTORY" \
-      -r || exit
   else
-    echo "Starting new conversion for $1 at ${BPW}bpw."
     python convert.py \
       -i ./models/$1/ \
       -w "$WORK_DIRECTORY" \
-      -d 0,1 \
+      -d 1 \
+      -r \
       -o "$OUTPUT_DIRECTORY" \
       -b $BPW || exit
   fi
@@ -45,7 +36,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   BPW="${parts[-1]}"
 
   if [ ! -f "./models/${x}_${y}/config.json" ]; then
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --exclude "*checkpoint*" "*global_state*" "*.arrow" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --exclude "*.arrow" "*checkpoint*" "*global_state*" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
     if ls ./models/${x}_${y}/*.bin 1> /dev/null 2>&1; then
       python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.bin
