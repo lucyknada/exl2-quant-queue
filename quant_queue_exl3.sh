@@ -17,7 +17,7 @@ quant() {
     python convert.py \
       -i ./models/$1/ \
       -w "$WORK_DIRECTORY" \
-      -d 1 \
+      -d 0,1 \
       -o "$OUTPUT_DIRECTORY" \
       -b $BPW || exit
   fi
