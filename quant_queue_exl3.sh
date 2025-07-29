@@ -23,8 +23,8 @@ quant() {
   fi
 
   cat "./models/${1}/README.md" | sed -z "s/---/---\n### exl3 quant\n---\n### check revisions for quants\n---\n/2" > "${OUTPUT_DIRECTORY}/README.md"
-  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private --revision ${BPW}bpw "${USER}/${1}-exl3" "${OUTPUT_DIRECTORY}" || return 0
-  HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli upload --private "${USER}/${1}-exl3" ${OUTPUT_DIRECTORY}/README.md ./README.md || return 0
+  HF_HUB_ENABLE_HF_TRANSFER=1 hf upload --private --revision ${BPW}bpw "${USER}/${1}-exl3" "${OUTPUT_DIRECTORY}" || return 0
+  HF_HUB_ENABLE_HF_TRANSFER=1 hf upload --private "${USER}/${1}-exl3" ${OUTPUT_DIRECTORY}/README.md ./README.md || return 0
 }
 
 while IFS= read -r line || [[ -n "$line" ]]; do
@@ -35,7 +35,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   BPW="${parts[-1]}"
 
   if [ ! -f "./models/${x}_${y}/config.json" ]; then
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download "${x}/${y}" --exclude "*.arrow" "*checkpoint*" "*global_state*" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
+    HF_HUB_ENABLE_HF_TRANSFER=1 hf download "${x}/${y}" --exclude "*.arrow" "*checkpoint*" "*global_state*" "*.pth" "*.pt" "*.nemo" --local-dir="./models/${x}_${y}"
     if ls ./models/${x}_${y}/*.bin 1> /dev/null 2>&1; then
       python ./util/convert_safetensors.py ./models/${x}_${y}/*.bin
       rm ./models/${x}_${y}/*.bin
