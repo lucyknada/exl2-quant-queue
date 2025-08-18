@@ -1,8 +1,8 @@
 #!/bin/bash
 
 USER=""
-PARALLEL=2
-DEVICES=(0 1 2 3 4 5 6 7)   # available GPUs
+PARALLEL=1
+DEVICES=(0 1)   # available GPUs
 LOCKDIR="./locks"
 mkdir -p "$LOCKDIR"
 
