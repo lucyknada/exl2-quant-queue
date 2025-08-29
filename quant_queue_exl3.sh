@@ -61,7 +61,9 @@ quant() {
 download_model() {
   MODEL="$1"; X="$2"; Y="$3"
   LOCKFILE="$LOCKDIR/${MODEL}.lock"
-  exec {fd}>"$LOCKFILE"; flock -x $fd
+  mkdir -p "$LOCKDIR"
+  exec 9>"$LOCKFILE" || return 1
+  flock -x 9
 
   if [ ! -f "./models/${MODEL}/config.json" ]; then
     echo "Downloading $X/$Y ..."
@@ -73,7 +75,7 @@ download_model() {
     fi
   fi
   # release the download lock immediately after ensuring presence
-  flock -u $fd; exec {fd}>&-
+  flock -u 9; exec 9>&-
 }
 
 process_line() {
@@ -99,6 +101,14 @@ process_line() {
 
 export -f process_line quant download_model
 export USER GPUS_PER_JOB LOCKDIR
+
+# Materialize function definitions for tmux panes to source (export -f is not reliable across tmux)
+LIB_PATH="$LOCKDIR/lib.sh"
+{
+  declare -f process_line
+  declare -f quant
+  declare -f download_model
+} > "$LIB_PATH"
 
 # detect venv path
 if [ -d "./venv" ]; then
@@ -201,7 +211,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   job_file="$LOCKDIR/pane_${pane}.job"
   printf "%s" "$line" > "$job_file"
 
-  cmd="bash -c 'export CUDA_VISIBLE_DEVICES=\"\$1\"; if [ -n \"\$2\" ] && [ -f \"\$2\" ]; then . \"\$2\"; fi; echo \"[dispatch] pane ${pane} -> GPUs \$1 (CVD=\$CUDA_VISIBLE_DEVICES)\"; process_line \"\$3\" \"\$1\" \"\$4\" \"\$5\"; status=\$?; touch \"\$6\"; echo \"--- DONE (status=\$status) ---\"; exec bash' -- \"$devstr\" \"$VENV_PATH\" \"$job_file\" \"$local_devs\" \"$job_index\" \"$ready_file\""
+  cmd="bash -c 'export CUDA_VISIBLE_DEVICES=\"\$1\"; export LOCKDIR=\"\$8\"; if [ -n \"\$2\" ] && [ -f \"\$2\" ]; then . \"\$2\"; fi; . \"\$7\"; echo \"[dispatch] pane ${pane} -> GPUs \$1 (CVD=\$CUDA_VISIBLE_DEVICES)\"; process_line \"\$3\" \"\$1\" \"\$4\" \"\$5\"; status=\$?; touch \"\$6\"; echo \"--- DONE (status=\$status) ---\"; exec bash' -- \"$devstr\" \"$VENV_PATH\" \"$job_file\" \"$local_devs\" \"$job_index\" \"$ready_file\" \"$LIB_PATH\" \"$LOCKDIR\""
 
   tmux respawn-pane -t "$SESSION:0.$pane" -k "$cmd"
 
