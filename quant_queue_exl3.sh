@@ -3,13 +3,20 @@
 USER=""
 
 # Number of GPUs per quant job
-GPUS_PER_JOB=1
+GPUS_PER_JOB=2
 
 # List of all available GPUs
-DEVICES=(0 1)
+DEVICES=(0 1 2 3 4 5 6 7)
 
 # TMUX session name
 SESSION="quant_session"
+
+# Default tmux dimensions to ensure pane splits succeed when detached
+DEFAULT_TMUX_COLS=200
+DEFAULT_TMUX_LINES=60
+
+# Path to job queue file
+QUEUE_FILE="queue.txt"
 
 # Lock folder for serializing downloads
 LOCKDIR="./locks"
@@ -99,7 +106,7 @@ if [ -d "./venv" ]; then
 elif [ -d "./.venv" ]; then
   VENV_PATH="./.venv/bin/activate"
 else
-  echo "No venv/.venv found"; exit 1
+  VENV_PATH=""
 fi
 
 # ensure tmux exists
@@ -107,9 +114,21 @@ if ! command -v tmux >/dev/null 2>&1; then
   echo "Error: tmux is not installed or not on PATH"; exit 1
 fi
 
+# Determine number of jobs (ignore blank lines and lines starting with #)
+JOB_COUNT=$(awk 'BEGIN{c=0} /^[[:space:]]*#/ {next} NF {c++} END{print c+0}' "$QUEUE_FILE" 2>/dev/null || echo 0)
+if (( JOB_COUNT == 0 )); then
+  echo "No jobs found in $QUEUE_FILE"
+  exit 0
+fi
+
+# Do not create more panes than jobs
+if (( PARALLEL > JOB_COUNT )); then
+  PARALLEL=$JOB_COUNT
+fi
+
 # Kill old tmux session if exists and start one fresh
 tmux kill-session -t "$SESSION" 2>/dev/null
-tmux new-session -d -s "$SESSION" -c "$PWD" bash   # start detached with one shell
+tmux new-session -d -s "$SESSION" -x "$(tput cols 2>/dev/null || echo "$DEFAULT_TMUX_COLS")" -y "$(tput lines 2>/dev/null || echo "$DEFAULT_TMUX_LINES")" -c "$PWD" bash   # start detached with one shell sized to terminal
 
 # Build fixed GPU groups of size GPUS_PER_JOB so groups are never re-used concurrently
 # Helper to compute device string for a given pane index
@@ -126,9 +145,22 @@ compute_devstr_for_pane() {
 
 # Ensure we have exactly PARALLEL panes ready and mark them initially idle
 for (( i=1; i<PARALLEL; i++ )); do
-  tmux split-window -t "$SESSION:0" -h -d -c "$PWD" bash
+  if tmux split-window -t "$SESSION:0" -h -d -c "$PWD" bash 2>/dev/null; then
+    :
+  elif tmux split-window -t "$SESSION:0" -v -d -c "$PWD" bash 2>/dev/null; then
+    :
+  else
+    echo "Warning: Unable to create additional tmux pane; limiting concurrency."
+    break
+  fi
   tmux select-layout -t "$SESSION:0" tiled
 done
+
+# Adapt PARALLEL to the actual number of panes that were created
+actual_panes="$(tmux list-panes -t "$SESSION:0" 2>/dev/null | wc -l | tr -d ' ')"
+if [ -n "$actual_panes" ] && [ "$actual_panes" -gt 0 ]; then
+  PARALLEL="$actual_panes"
+fi
 
 next_pane=0
 for (( i=0; i<PARALLEL; i++ )); do
@@ -169,12 +201,12 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   job_file="$LOCKDIR/pane_${pane}.job"
   printf "%s" "$line" > "$job_file"
 
-  cmd="bash -c 'export CUDA_VISIBLE_DEVICES=\"\$1\"; . \"\$2\"; echo \"[dispatch] pane ${pane} -> GPUs \$1 (CVD=\$CUDA_VISIBLE_DEVICES)\"; process_line \"\$3\" \"\$1\" \"\$4\" \"\$5\"; status=\$?; touch \"\$6\"; echo \"--- DONE (status=\$status) ---\"; exec bash' -- \"$devstr\" \"$VENV_PATH\" \"$job_file\" \"$local_devs\" \"$job_index\" \"$ready_file\""
+  cmd="bash -c 'export CUDA_VISIBLE_DEVICES=\"\$1\"; if [ -n \"\$2\" ] && [ -f \"\$2\" ]; then . \"\$2\"; fi; echo \"[dispatch] pane ${pane} -> GPUs \$1 (CVD=\$CUDA_VISIBLE_DEVICES)\"; process_line \"\$3\" \"\$1\" \"\$4\" \"\$5\"; status=\$?; touch \"\$6\"; echo \"--- DONE (status=\$status) ---\"; exec bash' -- \"$devstr\" \"$VENV_PATH\" \"$job_file\" \"$local_devs\" \"$job_index\" \"$ready_file\""
 
   tmux respawn-pane -t "$SESSION:0.$pane" -k "$cmd"
 
   ((job_index++))
-done < queue.txt
+done < "$QUEUE_FILE"
 
 # Attach or switch to the session depending on whether we're already in tmux
 if [ -n "$TMUX" ]; then
