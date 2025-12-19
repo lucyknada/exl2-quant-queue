@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER=""
+USERNAME=""
 
 # Number of GPUs per quant job
 GPUS_PER_JOB=2
@@ -54,8 +54,8 @@ quant() {
   sed -z "s/---/---\\n### exl3 quant\\n---\\n### check revisions for quants\\n---\\n/2" \
     "./models/${MODEL}/README.md" > "${OUTPUT_DIRECTORY}/README.md"
 
-  HF_HUB_ENABLE_HF_TRANSFER=1 hf upload --private --revision "${BPW}bpw" "${USER}/${MODEL}-exl3" "${OUTPUT_DIRECTORY}" || true
-  HF_HUB_ENABLE_HF_TRANSFER=1 hf upload --private "${USER}/${MODEL}-exl3" "${OUTPUT_DIRECTORY}/README.md" ./README.md || true
+  HF_HUB_ENABLE_HF_TRANSFER=1 hf upload --private --revision "${BPW}bpw" "${USERNAME}/${MODEL}-exl3" "${OUTPUT_DIRECTORY}" || true
+  HF_HUB_ENABLE_HF_TRANSFER=1 hf upload --private "${USERNAME}/${MODEL}-exl3" "${OUTPUT_DIRECTORY}/README.md" ./README.md || true
 }
 
 download_model() {
@@ -105,7 +105,7 @@ process_line() {
 }
 
 export -f process_line quant download_model
-export USER GPUS_PER_JOB LOCKDIR
+export USERNAME GPUS_PER_JOB LOCKDIR
 
 # Materialize function definitions for tmux panes to source (export -f is not reliable across tmux)
 LIB_PATH="$LOCKDIR/lib.sh"
