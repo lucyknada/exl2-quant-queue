@@ -68,7 +68,12 @@ download_model() {
   if [ ! -f "./models/${MODEL}/config.json" ]; then
     echo "Downloading $X/$Y ..."
     HF_HUB_ENABLE_HF_TRANSFER=1 hf download "${X}/${Y}" \
-      --exclude "*.arrow" "*checkpoint*" "*global_state*" "*.pth" "*.pt" "*.nemo" \
+      --exclude "*.arrow" \
+      --exclude "*checkpoint*" \
+      --exclude "*global_state*" \
+      --exclude "*.pth" \
+      --exclude "*.pt" \
+      --exclude "*.nemo" \
       --local-dir="./models/${MODEL}"
     if ls ./models/${MODEL}/*.bin 1>/dev/null 2>&1; then
       python ./util/convert_safetensors.py ./models/${MODEL}/*.bin && rm ./models/${MODEL}/*.bin
